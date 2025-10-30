@@ -1,0 +1,467 @@
+﻿@model List<Product>
+
+@{
+    ViewData["Title"] = "Point of Sale - Irish Beauty Products";
+}
+
+<div class="container-fluid">
+    <!-- Dashboard Cards -->
+    <div class="row">
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-left-primary shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">
+                                Total Products
+                            </div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">@Model.Count</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-boxes fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-left-warning shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">
+                                Expiry Alerts
+                            </div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800" id="expiryAlertCount">0</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-exclamation-triangle fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- Products Section -->
+        <div class="col-lg-8">
+            <div class="card shadow mb-4">
+                <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
+                    <h6 class="m-0 font-weight-bold text-primary">Beauty Products</h6>
+                    <div class="dropdown no-arrow">
+                        <input type="text" class="form-control form-control-sm" id="productSearch"
+                               placeholder="Search" style="width: 200px;">
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div class="row" id="productGrid">
+                        @foreach (var product in Model)
+                        {
+                            var expiryClass = "border-left-success";
+                            var expiryBadge = "";
+
+                            if (product.ExpiryDate.HasValue)
+                            {
+                                var daysUntilExpiry = (product.ExpiryDate.Value - DateTime.Now).Days;
+                                if (daysUntilExpiry <= 30) expiryClass = "border-left-warning";
+                                if (daysUntilExpiry <= 7) expiryClass = "border-left-danger";
+
+                                if (daysUntilExpiry <= 1) expiryBadge = "<span class='badge badge-danger'>EXPIRED</span>";
+                                else if (daysUntilExpiry <= 7) expiryBadge = "<span class='badge badge-warning'>EXPIRING</span>";
+                            }
+
+                            <div class="col-xl-3 col-md-4 col-sm-6 mb-4">
+                                <div class="card @expiryClass shadow h-100 product-card"
+                                     data-product-id="@product.Id"
+                                     data-product-name="@product.Name"
+                                     data-product-price="@product.Price"
+                                     data-product-stock="@product.QuantityOnHand"
+                                     data-expiry-date="@product.ExpiryDate">
+                                    <div class="card-body">
+                                        @Html.Raw(expiryBadge)
+                                        <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">
+                                            @product.Category
+                                        </div>
+                                        <div class="h6 mb-1 font-weight-bold text-gray-800">@product.Name</div>
+                                        <div class="h5 mb-1 font-weight-bold text-success">₱@product.Price.ToString("F2")</div>
+                                        <div class="text-xs text-muted">
+                                            SKU: @product.SKU<br>
+                                            @if (product.BatchNumber != null)
+                                            {
+                                                <text>Batch: @product.BatchNumber<br></text>
+                                            }
+                                            @if (product.ExpiryDate.HasValue)
+                                            {
+                                                <text>Expiry: @product.ExpiryDate.Value.ToString("MMM yyyy")<br></text>
+                                            }
+                                            Stock: <span class="font-weight-bold @(product.QuantityOnHand <= 5 ? "text-danger" : "text-success")">@product.QuantityOnHand</span>
+                                        </div>
+                                    </div>
+                                    <div class="card-footer bg-transparent">
+                                        <button class="btn btn-primary btn-block btn-sm add-to-cart">
+                                            <i class="fas fa-cart-plus fa-sm"></i> Add to Cart
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        }
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Shopping Cart Section -->
+        <div class="col-lg-4">
+            <div class="card shadow mb-4">
+                <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
+                    <h6 class="m-0 font-weight-bold text-primary">Shopping Cart</h6>
+                    <span class="badge badge-primary badge-counter" id="cartItemCount">0</span>
+                </div>
+                <div class="card-body">
+                    <div id="cartItems" class="mb-3" style="max-height: 400px; overflow-y: auto;">
+                        <p class="text-muted text-center py-4">No items in cart</p>
+                    </div>
+
+                    <div class="border-top pt-3">
+
+                        
+                        <div class="form-group mb-3">
+                            <label class="small font-weight-bold">Customer Type</label>
+                            <select id="customerType" class="form-control">
+                                <option value="0">Regular</option>
+                                <option value="0.13">Bulk Buyer (13% Off)</option>
+                                <option value="0.22">Reseller (22% Off)</option>
+                            </select>
+                        </div>
+
+                        <div class="d-flex justify-content-between mb-2">
+                            <span class="font-weight-bold">Subtotal:</span>
+                            <span class="font-weight-bold" id="subtotal">₱0.00</span>
+                        </div>
+
+                       
+                        <div class="d-flex justify-content-between mb-2">
+                            <span>Discount:</span>
+                            <span id="discountAmount">₱0.00</span>
+                        </div>
+
+                        <div class="d-flex justify-content-between mb-2">
+                            <span>Tax (10%):</span>
+                            <span id="tax">₱0.00</span>
+                        </div>
+                        <div class="d-flex justify-content-between mb-3">
+                            <span class="font-weight-bold text-success">Total:</span>
+                            <span class="font-weight-bold text-success" id="total">₱0.00</span>
+                        </div>
+
+                        <div class="form-group mb-3">
+                            <label class="small font-weight-bold">Cash Amount</label>
+                            <input type="number" step="0.1" class="form-control" id="cashAmount" placeholder="Enter cash amount">
+                        </div>
+                        <div class="d-flex justify-content-between mb-3">
+                            <span class="font-weight-bold text-info">Change:</span>
+                            <span class="font-weight-bold text-info" id="changeAmount">₱0.00</span>
+                        </div>
+
+                        <button id="checkoutBtn" class="btn btn-success btn-block" disabled>
+                            <i class="fas fa-cash-register fa-sm"></i> Process Sale
+                        </button>
+                        <button id="clearCartBtn" class="btn btn-outline-secondary btn-block mt-2">
+                            <i class="fas fa-trash fa-sm"></i> Clear Cart
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+@section Scripts {
+    <script>
+        let cart = [];
+        const taxRate = 0.10; // 10% tax
+
+        $(document).ready(function () {
+            $('.add-to-cart').click(function () {
+                addProductToCart($(this).closest('.product-card'));
+            });
+
+            $('#productSearch').on('input', function () {
+                const searchTerm = $(this).val().toLowerCase();
+                $('.product-card').each(function () {
+                    const name = $(this).data('product-name').toLowerCase();
+                    const category = $(this).find('.text-xs').text().toLowerCase();
+                    $(this).closest('.col-xl-3').toggle(name.includes(searchTerm) || category.includes(searchTerm));
+                });
+            });
+
+            $('#clearCartBtn').click(clearCart);
+            $('#checkoutBtn').click(processCheckout);
+            $('#cashAmount').on('input', calculateChange);
+            $('#customerType').on('change', function () {
+                updateCartDisplay();
+            });
+
+            updateExpiryAlertCount();
+        });
+
+        function addProductToCart(card) {
+            const productId = card.data('product-id');
+            const productName = card.data('product-name');
+            const price = parseFloat(card.data('product-price'));
+            const stock = parseInt(card.data('product-stock'));
+
+            const expiryDate = card.data('expiry-date');
+            if (expiryDate && new Date(expiryDate) <= new Date()) {
+                showToast(`${productName} is expired and cannot be sold!`, 'error');
+                return;
+            }
+
+            if (stock <= 0) {
+                showToast('Product out of stock!', 'error');
+                return;
+            }
+
+            const existing = cart.find(i => i.id === productId);
+            if (existing) {
+                if (existing.quantity >= stock) {
+                    showToast('Cannot add more than available stock!', 'warning');
+                    return;
+                }
+                existing.quantity++;
+            } else {
+                cart.push({ id: productId, name: productName, price, quantity: 1 });
+            }
+
+            updateCartDisplay();
+            showToast(`${productName} added to cart`, 'success');
+        }
+
+        function updateCartDisplay() {
+            const cartItems = $('#cartItems');
+            const subtotalEl = $('#subtotal');
+            const taxEl = $('#tax');
+            const totalEl = $('#total');
+            const checkoutBtn = $('#checkoutBtn');
+            const discountRate = parseFloat($('#customerType').val()) || 0;
+
+            if (cart.length === 0) {
+                cartItems.html('<p class="text-muted text-center py-4">No items in cart</p>');
+                $('#cartItemCount').text('0');
+                subtotalEl.text('₱0.00');
+                $('#discountAmount').text('₱0.00');
+                taxEl.text('₱0.00');
+                totalEl.text('₱0.00');
+                $('#cashAmount').val('');
+                $('#changeAmount').text('₱0.00');
+                checkoutBtn.prop('disabled', true);
+                return;
+            }
+
+            let subtotal = 0;
+            let html = '';
+            cart.forEach(item => {
+                const itemTotal = item.price * item.quantity;
+                subtotal += itemTotal;
+
+                html += `
+                    <div class="cart-item mb-2 p-2 border rounded">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <strong>${item.name}</strong><br>
+                                <small class="text-muted">₱${item.price.toFixed(2)} each</small>
+                            </div>
+                            <div class="text-right">
+                                <div class="d-flex align-items-center">
+                                    <button class="btn btn-sm btn-outline-secondary decrease-qty" data-id="${item.id}">
+                                        <i class="fas fa-minus"></i>
+                                    </button>
+                                    <input type="number"
+                                           class="form-control mx-2 qty-input"
+                                           data-id="${item.id}"
+                                           min="1"
+                                           max="${$('.product-card[data-product-id="'+item.id+'"]').data('product-stock')}"
+                                           value="${item.quantity}"
+                                           style="width: 60px; text-align: center;">
+                                    <button class="btn btn-sm btn-outline-secondary increase-qty" data-id="${item.id}">
+                                        <i class="fas fa-plus"></i>
+                                    </button>
+                                </div>
+                                <div class="mt-1"><strong>₱${itemTotal.toFixed(2)}</strong></div>
+                            </div>
+                        </div>
+                    </div>`;
+            });
+
+            const discountAmount = subtotal * discountRate;
+            const discountedSubtotal = Math.max(subtotal - discountAmount, 0);
+            const tax = discountedSubtotal * taxRate;
+            const total = discountedSubtotal + tax;
+
+            cartItems.html(html);
+            $('#cartItemCount').text(cart.reduce((sum, i) => sum + i.quantity, 0));
+            subtotalEl.text('₱' + subtotal.toFixed(2));
+            $('#discountAmount').text('₱' + discountAmount.toFixed(2));
+            taxEl.text('₱' + tax.toFixed(2));
+            totalEl.text('₱' + total.toFixed(2));
+            checkoutBtn.prop('disabled', false);
+
+            calculateChange();
+
+            $('.increase-qty').click(function () {
+                const id = $(this).data('id');
+                const item = cart.find(i => i.id === id);
+                const stock = parseInt($(`.product-card[data-product-id="${id}"]`).data('product-stock'));
+                if (item && item.quantity < stock) {
+                    item.quantity++;
+                    updateCartDisplay();
+                } else {
+                    showToast('Cannot add more than available stock!', 'warning');
+                }
+            });
+
+            $('.decrease-qty').click(function () {
+                const id = $(this).data('id');
+                const item = cart.find(i => i.id === id);
+                if (item) {
+                    item.quantity--;
+                    if (item.quantity <= 0) cart = cart.filter(i => i.id !== id);
+                    updateCartDisplay();
+                }
+            });
+
+            $('.qty-input').off('blur keypress').on('blur keypress', function (e) {
+                if (e.type === 'keypress' && e.which !== 13) return;
+
+                const id = $(this).data('id');
+                let newQty = parseInt($(this).val()) || 1;
+                const stock = parseInt($(`.product-card[data-product-id="${id}"]`).data('product-stock'));
+
+                if (newQty < 1) newQty = 1;
+                if (newQty > stock) {
+                    newQty = stock;
+                    showToast('Cannot add more than available stock!', 'warning');
+                }
+
+                const item = cart.find(i => i.id === id);
+                if (item) {
+                    item.quantity = newQty;
+                    updateCartDisplay();
+                }
+            });
+
+            $('.qty-input').off('focus').on('focus', function () {
+                $(this).select();
+            });
+        }
+
+        function calculateChange() {
+            const cash = parseFloat($('#cashAmount').val()) || 0;
+            const total = parseFloat($('#total').text().replace('₱', '')) || 0;
+            const change = cash - total;
+
+            if (change >= 0) {
+                $('#changeAmount').text('₱' + change.toFixed(2)).removeClass('text-danger').addClass('text-info');
+            } else {
+                $('#changeAmount').text('-₱' + Math.abs(change).toFixed(2)).removeClass('text-info').addClass('text-danger');
+            }
+        }
+
+        function clearCart() {
+            if (cart.length > 0 && confirm('Clear the cart?')) {
+                cart = [];
+                updateCartDisplay();
+                showToast('Cart cleared', 'info');
+            }
+        }
+
+        function processCheckout() {
+            if (cart.length === 0) return showToast('Cart is empty!', 'warning');
+
+            const cash = parseFloat($('#cashAmount').val()) || 0;
+            const total = parseFloat($('#total').text().replace('₱', '')) || 0;
+            const discountRate = parseFloat($('#customerType').val()) || 0;
+            const subtotal = parseFloat($('#subtotal').text().replace('₱', '')) || 0;
+            const discountAmount = subtotal * discountRate;
+
+            if (cash <= 0) return showToast('Enter cash amount!', 'warning');
+            if (cash < total) return showToast('Cash amount is less than total!', 'error');
+
+            const saleData = {
+                Cart: cart,
+                TotalAmount: total,
+                PaymentMethod: "Cash",
+                DiscountRate: discountRate
+            };
+
+            $('#checkoutBtn').prop('disabled', true).html('<i class="fas fa-spinner fa-spin"></i> Processing...');
+
+            $.ajax({
+                url: '/POS/ProcessSale',
+                type: 'POST',
+                contentType: 'application/json',
+                data: JSON.stringify(saleData),
+                success: function (res) {
+                    if (res.success) {
+                        showToast('Sale completed! Sale ID: ' + res.saleId, 'success');
+                        printReceipt(res.saleId, cash, discountAmount);
+                        cart = [];
+                        updateCartDisplay();
+                        $('#cashAmount').val('');
+
+                        //  Trigger dashboard refresh in other tabs
+                        localStorage.setItem('saleMade', Date.now());
+                    } else {
+                        showToast('Error: ' + res.message, 'error');
+                    }
+                },
+                error: () => showToast('Error processing sale.', 'error'),
+                complete: () => $('#checkoutBtn').prop('disabled', false).html('<i class="fas fa-cash-register fa-sm"></i> Process Sale')
+            });
+        }
+
+        function printReceipt(saleId, cash, discountAmountPassed) {
+            const subtotal = parseFloat($('#subtotal').text().replace('₱', '')) || 0;
+            const discount = typeof discountAmountPassed !== 'undefined' ? discountAmountPassed : (parseFloat($('#discountAmount').text().replace('₱', '')) || 0);
+            const total = parseFloat($('#total').text().replace('₱', '')) || 0;
+            const change = cash - total;
+
+            let r = `=== IRISH BEAUTY PRODUCTS ===\nSale ID: ${saleId}\nDate: ${new Date().toLocaleString()}\n==============================\n`;
+            cart.forEach(i => r += `${i.name} x ${i.quantity} = ₱${(i.price * i.quantity).toFixed(2)}\n`);
+            r += `==============================\nSubtotal: ₱${subtotal.toFixed(2)}\nDiscount: ₱${discount.toFixed(2)}\nTax: ${$('#tax').text()}\nTotal: ₱${total.toFixed(2)}\nCash: ₱${cash.toFixed(2)}\nChange: ₱${change.toFixed(2)}\nPayment: CASH\nThank you!\n==============================\n`;
+
+            const w = window.open('', '_blank');
+            w.document.write('<pre>' + r + '</pre>');
+            w.document.close();
+            w.print();
+        }
+
+        function updateExpiryAlertCount() {
+            let count = 0;
+            $('.product-card').each(function () {
+                const exp = $(this).data('expiry-date');
+                if (exp) {
+                    const days = Math.ceil((new Date(exp) - new Date()) / (1000 * 60 * 60 * 24));
+                    if (days <= 30) count++;
+                }
+            });
+            $('#expiryAlertCount').text(count);
+        }
+
+        function showToast(msg, type) {
+            const cls = type === 'success' ? 'bg-success' :
+                        type === 'error' ? 'bg-danger' :
+                        type === 'warning' ? 'bg-warning' : 'bg-info';
+            const toast = `<div class="toast show position-fixed" style="top:20px;right:20px;z-index:9999">
+                <div class="toast-header ${cls} text-white">
+                    <strong class="me-auto">Notification</strong>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="toast"></button>
+                </div>
+                <div class="toast-body">${msg}</div></div>`;
+            $('body').append(toast);
+            setTimeout(() => $('.toast').remove(), 3000);
+        }
+    </script>
+}
+

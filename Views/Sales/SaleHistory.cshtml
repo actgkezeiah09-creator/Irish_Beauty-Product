@@ -1,0 +1,132 @@
+﻿@model List<SalesHistory>
+
+@{
+    ViewData["Title"] = "Sales History - Irish Beauty Products";
+}
+
+<div class="container-fluid">
+    <div class="d-sm-flex align-items-center justify-content-between mb-4">
+        <h1 class="h3 mb-0 text-gray-800">Sales History</h1>
+        <div>
+            <button class="btn btn-outline-primary btn-sm" onclick="exportToExcel()">
+                <i class="fas fa-file-excel fa-sm"></i> Export to Excel
+            </button>
+            <button class="btn btn-primary btn-sm" data-toggle="modal" data-target="#dateFilterModal">
+                <i class="fas fa-calendar fa-sm"></i> Filter by Date
+            </button>
+        </div>
+    </div>
+
+    <!-- Sales Table -->
+    <div class="card shadow mb-4">
+        <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
+            <h6 class="m-0 font-weight-bold text-primary">Sales Transactions</h6>
+            <div class="dropdown no-arrow">
+                <span class="badge badge-primary">Showing @Model.Count records</span>
+            </div>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-bordered" id="salesTable" width="100%" cellspacing="0">
+                    <thead class="thead-light">
+                        <tr>
+                            <th>Sale ID</th>
+                            <th>Date & Time</th>
+                            <th>Product Name</th>
+                            <th>Quantity</th>
+                            <th>Unit Price</th>
+                            <th>Line Total</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var sale in Model)
+                        {
+                            <tr>
+                                <td class="font-weight-bold">#@sale.SaleId</td>
+                                <td>@sale.SaleDate.ToString("MMM dd, yyyy hh:mm tt")</td>
+                                <td>@sale.ProductName</td>
+                                <td class="text-center">
+                                    <span class="badge badge-info">@sale.Quantity</span>
+                                </td>
+                                <td class="text-success">₱@sale.UnitPrice.ToString("N2")</td>
+                                <td class="font-weight-bold text-primary">₱@sale.LineTotal.ToString("N2")</td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Sale Items Modal -->
+<div class="modal fade" id="saleItemsModal" tabindex="-1" role="dialog" aria-labelledby="saleItemsModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="saleItemsModalLabel">Sale Details - #<span id="detailSaleId"></span></h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div id="saleItemsContent">
+                    <!-- Sale items will be loaded here -->
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+
+@section Scripts {
+    <script>
+         $(document).ready(function() {
+             // Initialize DataTable
+             $('#salesTable').DataTable({
+                 "pageLength": 10,
+                 "ordering": true,
+                 "order": [[1, "desc"]] // Sort by date descending
+             });
+         });
+
+         function exportToExcel() {
+            
+             let csv = 'Sale ID,Date,Product,Quantity,Unit Price,Line Total\n';
+
+             $('#salesTable tbody tr').each(function() {
+                 const cells = $(this).find('td');
+                 csv += `"${cells.eq(0).text()}","${cells.eq(1).text()}","${cells.eq(2).text()}","${cells.eq(3).text()}","${cells.eq(4).text()}","${cells.eq(5).text()}"\n`;
+             });
+
+             const blob = new Blob([csv], { type: 'text/csv' });
+             const url = window.URL.createObjectURL(blob);
+             const a = document.createElement('a');
+             a.href = url;
+             a.download = `sales-history-${new Date().toISOString().split('T')[0]}.csv`;
+             a.click();
+             window.URL.revokeObjectURL(url);
+         }
+
+         // clickable row -> mini product modal
+         $(document).on('click', '.clickable-row', function () {
+             let product = $(this).data('product');
+             let qty = $(this).data('quantity');
+             let price = $(this).data('unitprice');
+             let total = $(this).data('total');
+
+             $('#productDetailModal .modal-body').html(`
+                 <p><strong>Product:</strong> ${product}</p>
+                 <p><strong>Quantity:</strong> ${qty}</p>
+                 <p><strong>Unit Price:</strong> ₱${parseFloat(price).toFixed(2)}</p>
+                 <p><strong>Total:</strong> ₱${parseFloat(total).toFixed(2)}</p>
+             `);
+
+             $('#productDetailModal').modal('show');
+        });
+    </script>
+}

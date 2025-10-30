@@ -1,0 +1,219 @@
+﻿@{
+    string? role = Context.Session.GetString("Role");
+    string? username = Context.Session.GetString("Username");
+}
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"] - Irish Beauty Product</title>
+
+    <!-- SB Admin 2 Template -->
+    <link rel="stylesheet" href="~/vendor/fontawesome-free/css/all.min.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/css/sb-admin-2.min.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/custom.css" asp-append-version="true" />
+    <link href="https://fonts.googleapis.com/css?family=Nunito:200,300,400,600,700,800,900" rel="stylesheet">
+</head>
+
+<body id="page-top" class="overflow-hidden" style="padding-top:70px;">
+    <div id="wrapper">
+        <!-- Sidebar -->
+        <ul class="navbar-nav bg-gradient-primary sidebar sidebar-dark accordion" id="accordionSidebar">
+
+            <!-- Brand -->
+            <a class="sidebar-brand d-flex align-items-center justify-content-center" asp-controller="Admin" asp-action="Dashboard">
+                <div class="sidebar-brand-icon rotate-n-15">
+                    <i class="fas fa-laugh-wink"></i>
+                </div>
+                <div class="sidebar-brand-text mx-3">Irish Beauty Product</div>
+            </a>
+
+            <hr class="sidebar-divider my-0">
+
+            <!-- Dashboard (Visible to All) -->
+            <li class="nav-item">
+                <a class="nav-link" asp-controller="Admin" asp-action="Dashboard">
+                    <i class="fas fa-fw fa-tachometer-alt"></i>
+                    <span>Dashboard</span>
+                </a>
+            </li>
+
+            <!-- Admin Only -->
+            @if (role == "Admin")
+            {
+                <li class="nav-item">
+                    <a class="nav-link" asp-controller="User" asp-action="Index">
+                        <i class="fas fa-fw fa-users"></i>
+                        <span>Manage Users</span>
+                    </a>
+                </li>
+            }
+
+            <hr class="sidebar-divider">
+            <div class="sidebar-heading">Core Functions</div>
+
+            <!-- Cashier + Admin -->
+            @if (role == "Cashier" || role == "Admin")
+            {
+                <li class="nav-item">
+                    <a class="nav-link" asp-controller="POS" asp-action="POS">
+                        <i class="fas fa-fw fa-cash-register"></i>
+                        <span>Point of Sale</span>
+                    </a>
+                </li>
+
+                <li class="nav-item">
+                    <a class="nav-link" asp-controller="Sales" asp-action="SaleHistory">
+                        <i class="fas fa-fw fa-history"></i>
+                        <span>Sales History</span>
+                    </a>
+                </li>
+            }
+
+            <!-- Staff + Admin -->
+            @if (role == "Staff" || role == "Admin")
+            {
+                <li class="nav-item">
+                    <a class="nav-link" asp-controller="Inventory" asp-action="Inventory">
+                        <i class="fas fa-fw fa-boxes"></i>
+                        <span>Inventory Management</span>
+                    </a>
+                </li>
+
+              
+            }
+
+            <!-- Admin Reports -->
+            @if (role == "Admin")
+            {
+                <hr class="sidebar-divider">
+                <div class="sidebar-heading">Reports</div>
+                <li class="nav-item">
+                    <a class="nav-link" asp-controller="Supplier" asp-action="Index">
+                        <i class="fas fa-fw fa-truck"></i>
+                        <span>Supplier Management</span>
+                    </a>
+                </li>
+            }
+
+            <hr class="sidebar-divider d-none d-md-block">
+            <div class="text-center d-none d-md-inline">
+                <button class="rounded-circle border-0" id="sidebarToggle"></button>
+            </div>
+        </ul>
+       
+        <!-- Content Wrapper -->
+        <div id="content-wrapper" class="d-flex flex-column" style="height: 100vh; overflow: hidden;">
+
+            <div id="content" class="flex-grow-1 overflow-auto" style="max-height: 100vh;">
+                
+                <!-- Topbar -->
+                <nav class="navbar navbar-expand navbar-light bg-primary topbar mb-4 fixed-top shadow">
+                    
+                    <!-- Sidebar Toggle -->
+                    <button id="sidebarToggleTop" class="btn btn-link d-md-none rounded-circle mr-3">
+                        <i class="fa fa-bars"></i>
+                    </button>
+
+                    
+
+                    <!-- Topbar Navbar -->
+                    <ul class="navbar-nav ml-auto">
+                        <div class="topbar-divider d-none d-sm-block"></div>
+
+                       
+                        <li class="nav-item dropdown no-arrow">
+                            <a class="nav-link dropdown-toggle" href="#" id="userDropdown" role="button"
+                               data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                                <span class="mr-2 d-none d-lg-inline text-white small">
+                                    Hi, @(username ?? "User") (@(role ?? "Guest"))
+                                </span>
+                                <img class="img-profile rounded-circle" src="~/img/undraw_profile.svg" />
+                            </a>
+                            <div class="dropdown-menu dropdown-menu-right shadow animated--grow-in" aria-labelledby="userDropdown">
+                                
+                                <div class="dropdown-divider"></div>
+                                <a class="dropdown-item" asp-controller="Home" asp-action="Logout">
+                                    <i class="fas fa-sign-out-alt fa-sm fa-fw mr-2 text-gray-400"></i> Logout
+                                </a>
+                            </div>
+                        </li>
+                    </ul>
+                </nav>
+                <!-- End Topbar -->
+
+                <div class="container-fluid">
+                    @RenderBody()
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast Notifications -->
+    <div aria-live="polite" aria-atomic="true"
+         class="position-fixed bottom-0 right-0 p-3"
+         style="z-index: 2000; right: 0; bottom: 0;">
+        <div id="toastContainer"></div>
+    </div>
+
+    <!-- Core JS -->
+    <script src="~/vendor/jquery/jquery.min.js"></script>
+    <script src="~/vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
+    <script src="~/vendor/jquery-easing/jquery.easing.min.js"></script>
+    <script src="~/js/js/sb-admin-2.min.js"></script>
+    <script src="~/vendor/chart.js/Chart.min.js"></script>
+    <script src="~/js/Chart/chart-area.js"></script>
+    <script src="~/js/Chart/chart-pie.js"></script>
+
+   
+    <link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/dataTables.bootstrap4.min.css" />
+    <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
+    <script src="https://cdn.datatables.net/1.13.6/js/dataTables.bootstrap4.min.js"></script>
+
+
+    @RenderSection("Scripts", required: false)
+
+    <!-- Toast Alerts -->
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            var success = '@TempData["Success"]';
+            var warning = '@TempData["Warning"]';
+            var error = '@TempData["Error"]';
+
+            function showToast(message, type) {
+                if (!message) return;
+
+                let bgClass = "bg-success text-white";
+                if (type === "warning") bgClass = "bg-warning text-dark";
+                if (type === "error") bgClass = "bg-danger text-white";
+
+                let toast = document.createElement("div");
+                toast.className = `toast align-items-center ${bgClass}`;
+                toast.role = "alert";
+                toast.ariaLive = "assertive";
+                toast.ariaAtomic = "true";
+                toast.setAttribute("data-delay", "3000");
+
+                toast.innerHTML = `
+                    <div class="d-flex">
+                        <div class="toast-body">${message}</div>
+                        <button type="button" class="ml-2 mb-1 close text-white"
+                                data-dismiss="toast" aria-label="Close">
+                            <span aria-hidden="true">&times;</span>
+                        </button>
+                    </div>
+                `;
+
+                document.getElementById("toastContainer").appendChild(toast);
+                $(toast).toast("show");
+            }
+
+            showToast(success, "success");
+            showToast(warning, "warning");
+            showToast(error, "error");
+        });
+    </script>
+</body>
+</html>

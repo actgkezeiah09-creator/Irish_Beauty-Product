@@ -1,0 +1,98 @@
+﻿/* Ensure page fills viewport */
+html, body {
+    height: 100%;
+}
+body {
+    overflow: hidden; /* prevents body scroll, only content scrolls */
+}
+#wrapper {
+    min-height: 100vh;
+    display: flex;
+}
+
+#content-wrapper {
+    flex: 1 1 auto; /* grow to fill remaining space */
+    display: flex;
+    flex-direction: column;
+    min-height: 0; 
+    overflow: hidden;
+}
+
+#content {
+    flex: 1 1 auto;
+    min-height: 0; 
+    overflow-y: auto; 
+    -webkit-overflow-scrolling: touch; 
+}
+
+   
+    #content .container-fluid {
+        padding-bottom: 2rem;
+    }
+
+
+
+.bg-gradient-primary {
+    background: linear-gradient(180deg, #e84393 15%, #ffb6d9 100%) !important;
+}
+
+
+.btn-user.btn-block {
+    background-color: #e84393 !important;
+    border-color: #e84393 !important;
+    color: #fff !important;
+    border-radius: 40px !important;
+    padding: 10px 60px !important;
+    font-weight: normal !important;
+    transition: background-color 0.3s ease;
+}
+
+    .btn-user.btn-block:hover {
+        background-color: #d73382 !important; /* slightly darker shade */
+        border-color: #d73382 !important;
+        color: #fff !important;
+    }
+
+.bg-primary {
+    background-color: #e84393 !important;
+}
+
+
+.btn-pink {
+    background-color: #e84393 !important;
+    border: none !important;
+    color: white !important;
+    border-radius: 40px !important;
+    padding: 10px 60px !important;
+    font-weight: normal !important;
+    transition: background-color 0.3s ease;
+}
+
+    .btn-pink:hover {
+        background-color: #ff5fa2 !important;
+    }
+
+/* Search bar input (slightly darker pink) */
+.navbar-search .form-control {
+    background-color: #ff9ac1 !important;
+    color: #fff !important;
+    border-radius: 20px 0 0 20px !important; /* round left side only */
+}
+
+    /* Placeholder text color */
+    .navbar-search .form-control::placeholder {
+        color: #fce4ec !important;
+    }
+
+.navbar-search .btn-primary {
+    background-color: #ff9ac1 !important; 
+    border: none !important;
+    color: #fff !important;
+    border-radius: 0 20px 20px 0 !important; 
+    margin-left: -1px;
+}
+
+    /* Hover effect */
+    .navbar-search .btn-primary:hover {
+        background-color: #e84393 !important; /* deeper hover pink */
+    }

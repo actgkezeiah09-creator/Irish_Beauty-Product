@@ -1,0 +1,82 @@
+﻿@{
+    Layout = "~/Views/Shared/_LayoutLogin.cshtml";
+    ViewData["Title"] = "Login";
+}
+
+@model Irish_Beauty_Product.Models.User
+
+<div class="container d-flex justify-content-center align-items-center" style="min-height: 100vh;">
+    <div class="card border-0 shadow-lg"
+         style="background-color: rgba(255, 255, 255, 0.2);
+                backdrop-filter: blur(10px);
+                border-radius: 15px;
+                width: 400px;">
+
+        <div class="card-body">
+            <div class="text-center mb-4">
+                <h1 class="h4 text-gray-900">WELCOME!</h1>
+            </div>
+
+            @if (ViewBag.Error != null)
+            {
+                <div class="alert alert-danger">@ViewBag.Error</div>
+            }
+
+            <form asp-action="Login" asp-controller="Home" method="post">
+                <div class="form-group">
+                    <input asp-for="Username" class="form-control form-control-user"
+                           placeholder="Enter Username" />
+                </div>
+
+                <div class="form-group position-relative mb-0">
+                    <input asp-for="Password" type="password"
+                           class="form-control form-control-user"
+                           placeholder="Password" id="passwordInput" />
+                    <span onclick="togglePassword()"
+                          class="position-absolute"
+                          style="top: 50%; right: 15px; transform: translateY(-50%); cursor: pointer;">
+                        <i id="toggleIcon" class="fas fa-eye"></i>
+                    </span>
+                </div>
+                <div class="text-right mt-1">
+                    <a class="small" asp-controller="Home" asp-action="ForgotPassword">Forgot Password?</a>
+                </div>
+
+                <div class="text-center">
+                    <button type="submit"
+                            class="btn btn-pink"
+                            style="border-radius: 50px;">
+                        Login
+                    </button>
+                </div>
+            </form>
+
+            
+        </div>
+    </div>
+</div>
+
+        
+    
+
+@section Scripts {
+    <script>
+        function togglePassword() {
+            var input = document.getElementById("passwordInput");
+            var icon = document.getElementById("toggleIcon");
+
+            if (input.type === "password") {
+                input.type = "text";
+                icon.classList.remove("fa-eye");
+                icon.classList.add("fa-eye-slash");
+            } else {
+                input.type = "password";
+                icon.classList.remove("fa-eye-slash");
+                icon.classList.add("fa-eye");
+            }
+        }
+    </script>
+}
+
+
+

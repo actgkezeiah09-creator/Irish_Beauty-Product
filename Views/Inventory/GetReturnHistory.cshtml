@@ -1,0 +1,99 @@
+﻿@model IEnumerable<dynamic>
+@{
+    Layout = "~/Views/Shared/_LayoutAdmin.cshtml";
+    ViewData["Title"] = "Return History";
+}
+
+<!-- Page Heading -->
+<div class="d-sm-flex align-items-center justify-content-between mb-4">
+    <h1 class="h3 mb-0 text-gray-800">Return History</h1>
+    <div>
+        <a asp-controller="Admin" asp-action="InventoryReport" class="btn btn-sm btn-secondary shadow-sm">
+            <i class="fas fa-arrow-left fa-sm text-white-50"></i> Back to Inventory Report
+        </a>
+        <a href="#" onclick="window.print()" class="btn btn-sm btn-primary shadow-sm">
+            <i class="fas fa-print fa-sm text-white-50"></i> Print Report
+        </a>
+    </div>
+</div>
+
+<!-- 🔍 Short Search Bar -->
+<div class="mb-3 text-right">
+    <input type="text" id="returnSearch" class="form-control form-control-sm d-inline-block w-auto"
+           placeholder="Search..." />
+</div>
+
+<!-- Return History Table -->
+<div class="card shadow mb-4">
+    <div class="card-header py-3 d-flex justify-content-between align-items-center">
+        <h6 class="m-0 font-weight-bold text-primary">Returned Products Overview</h6>
+        <span class="text-muted small">As of @DateTime.Now.ToString("MMMM dd, yyyy")</span>
+    </div>
+
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table table-bordered table-hover" id="returnHistoryTable" width="100%" cellspacing="0">
+                <thead class="thead-light">
+                    <tr>
+                        <th>Return ID</th>
+                        <th>Product Name</th>
+                        <th>Category</th>
+                        <th class="text-center">Quantity Returned</th>
+                        <th>Reason</th>
+                        <th class="text-center">Return Date</th>
+                        <th>Processed By</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @if (Model != null && Model.Any())
+                    {
+                        foreach (var item in Model)
+                        {
+                            <tr>
+                                <td>@item.ReturnId</td>
+                                <td>@item.ProductName</td>
+                                <td>@item.Category</td>
+                                <td class="text-center">@item.QuantityReturned</td>
+                                <td>@item.Reason</td>
+                                <td class="text-center">@((DateTime)item.ReturnDate)</td>
+                                <td>@item.ProcessedBy</td>
+                            </tr>
+                        }
+                    }
+                    else
+                    {
+                        <tr>
+                            <td colspan="7" class="text-center text-muted">No return records found.</td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        $(document).ready(function () {
+            // Keep your existing DataTable
+            $('#returnHistoryTable').DataTable({
+                paging: true,
+                searching: true,
+                ordering: true,
+                autoWidth: false,
+                language: {
+                    search: "_INPUT_",
+                    searchPlaceholder: "Search returns..."
+                }
+            });
+
+            // Add custom short search bar functionality
+            $("#returnSearch").on("keyup", function () {
+                var value = $(this).val().toLowerCase();
+                $("#returnHistoryTable tbody tr").filter(function () {
+                    $(this).toggle($(this).text().toLowerCase().indexOf(value) > -1);
+                });
+            });
+        });
+    </script>
+}

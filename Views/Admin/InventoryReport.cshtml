@@ -1,0 +1,112 @@
+﻿@model IEnumerable<dynamic>
+@{
+    Layout = "~/Views/Shared/_LayoutAdmin.cshtml";
+    ViewData["Title"] = "Inventory Report";
+}
+
+<div class="d-sm-flex align-items-center justify-content-between mb-4">
+    <h1 class="h3 mb-0 text-gray-800">Inventory Report</h1>
+    <div>
+        <a asp-controller="Inventory" asp-action="GetReturnHistory" class="btn btn-sm btn-warning shadow-sm">
+            <i class="fas fa-undo fa-sm text-white-50"></i> Return History
+        </a>
+        <a href="#" onclick="window.print()" class="btn btn-sm btn-primary shadow-sm">
+            <i class="fas fa-print fa-sm text-white-50"></i> Print Report
+        </a>
+    </div>
+</div>
+<!-- Inventory Report Table -->
+<div class="card shadow mb-4">
+    <div class="card-header py-3 d-flex justify-content-between align-items-center">
+        <h6 class="m-0 font-weight-bold text-primary">Product Inventory Overview</h6>
+        <span class="text-muted small">As of @DateTime.Now.ToString("MMMM dd, yyyy")</span>
+    </div>
+
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table table-bordered table-hover" id="dataTable" width="100%" cellspacing="0">
+                <thead class="thead-light">
+                    <tr>
+                        <th>ID</th>
+                        <th>Product Name</th>
+                        <th>Category</th>
+                        <th class="text-right">Cost (₱)</th>
+                        <th class="text-right">Unit Price (₱)</th>
+                        <th class="text-center">Quantity</th>
+                        <th class="text-right">Total Value (₱)</th>
+                        <th class="text-center">Expiry Date</th>
+                        <th class="text-center">Returned</th>
+                        <th class="text-center">Turnover Rate</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var item in Model)
+                    {
+                        decimal totalSold = Convert.ToDecimal(item.TotalSold);
+                        decimal avgInventory = (Convert.ToDecimal(item.QuantityOnHand) + totalSold) / 2;
+                        decimal turnover = avgInventory > 0 ? totalSold / avgInventory : 0;
+
+                        <tr>
+                            <td>@item.Id</td>
+                            <td>@item.Name</td>
+                            <td>@item.Category</td>
+                            <td class="text-right">@item.Cost.ToString("N2")</td>
+                            <td class="text-right">@item.Price.ToString("N2")</td>
+                            <td class="text-center">@item.QuantityOnHand</td>
+                            <td class="text-right text-success font-weight-bold">@item.TotalValue.ToString("N2")</td>
+                            <td class="text-center">
+                                @(item.ExpiryDate == null ? "N/A" : ((DateTime)item.ExpiryDate).ToString("MMM dd, yyyy"))
+                            </td>
+                            <td class="text-center">@item.TotalReturned</td>
+                            <td class="text-center text-primary">@turnover.ToString("0.00")</td>
+                        </tr>
+                    }
+                </tbody>
+                <tfoot class="font-weight-bold">
+                    <tr>
+                        <td colspan="9" class="text-right">Total Inventory Value:</td>
+                        <td class="text-right text-primary">
+                            ₱@Model.Sum(x => (decimal)x.TotalValue).ToString("N2")
+                        </td>
+                    </tr>
+                </tfoot>
+            </table>
+        </div>
+    </div>
+</div>
+
+<script>
+    $(document).ready(function () {
+        $("#returnForm").on("submit", function (e) {
+            e.preventDefault();
+
+            const data = {
+                ProductName: $("#productName").val(),
+                QuantityReturned: $("#quantityReturned").val(),
+                Reason: $("#returnReason").val()
+            };
+
+            $.ajax({
+                url: '/Inventory/ProcessReturn',
+                type: 'POST',
+                data: JSON.stringify(data),
+                contentType: 'application/json',
+                success: function (res) {
+                    alert(res.message || "Product return successfully processed!");
+                    $("#returnModal").modal("hide");
+                    $("#returnForm")[0].reset();
+
+                    if (res.redirectUrl) {
+                        window.location.href = res.redirectUrl; // ✅ Go to Return History page
+                    } else {
+                        location.reload();
+                    }
+                },
+                error: function () {
+                    alert("Error processing return. Please try again.");
+                }
+            });
+        });
+    });
+</script>
+
